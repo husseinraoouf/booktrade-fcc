@@ -1,0 +1,71 @@
+<div class="container ng-scope">
+
+    <button class="btn btn-success" id="trad">Your trade requests (<span id="reqNum"> {{reqNum}} </span> outstanding)</button>
+    <button class="btn btn-primary" id="tradq1">Trade requests for you (<span id="offNum"> {{offNum}} </span> unapproved)</button>
+
+    <div class="row" id="trad2" style="display: none;">
+        <div class="col-lg-12">
+            <h1 class="page-header">Your outstanding requests:</h1>
+                <ul class="nav nav-tabs nav-stacked col-md-4 col-lg-4 col-sm-6" id="trades">
+                    {{#each requests}}
+                        <li id="{{this._id}}">
+                            <a class="no">
+                                {{this.title}}
+                                <button class="close">
+                                    <i class="fa fa-times"></i>
+                                </button>
+                            </a>
+                        </li>
+
+                    {{/each}}
+                </ul>
+        </div>
+    </div>
+
+
+    <div class="row" id="tradq" style="display: none;">
+        <div class="col-lg-12">
+            <h1 class="page-header">Your outstanding offers:</h1>
+                <ul class="nav nav-tabs nav-stacked col-md-4 col-lg-4 col-sm-6" id="tradesq">
+                    {{#each offers}}
+                        <li id="{{this._id}}">
+                            <a class="no">
+                                {{this.title}}
+                                <button class="close">
+                                    <i class="fa fa-thumbs-o-down" aria-hidden="true"></i>
+                                </button>
+                                <button class="close">
+                                    <i class="fa fa-thumbs-o-up" aria-hidden="true"></i>
+                                </button>
+                            </a>
+                        </li>
+                    {{/each}}
+
+                </ul>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12" id="books">
+            <h1 class="page-header">All Books:</h1>
+
+            {{#each books}}
+
+                <div class="cover" id="{{this._id}}">
+                    <img alt="{{this.title}}" src="{{this.img}}">
+
+                    {{#equal ../user._id this.userId }}
+                        <button type="button" class="close">x</button>
+                    {{else}}
+                        <button type="button" class="trade">z</button>
+                    {{/equal}}
+                </div>
+
+            {{/each}}
+
+            <!-- {{id}} -->
+        </div>
+    </div>
+
+
+</div>
