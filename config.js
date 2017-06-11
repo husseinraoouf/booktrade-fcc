@@ -1,7 +1,7 @@
 module.exports = {
   "mongodbUri" : "mongodb://hussein:123456@ds163721.mlab.com:63721/heroku_375dq4wl",
   "url" : "https://booktrade-fcc.herokuapp.com/",
-  
+
   "TWITTER_CONSUMER_KEY" : "MkLSxCTNyLrGNCHUcBVsMbQB2",
   "TWITTER_CONSUMER_SECRET" : "epmai5qADfEAyhtyRutH383BoY4MTUrlH4c7DhpLXLqZEPWqdw",
 

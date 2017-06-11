@@ -97,12 +97,6 @@ passport.use(new TwitterStrategy({
     callbackURL: config.url + "auth/twitter/callback"
   },
   function(token, tokenSecret, profile, cb) {
-    // In this example, the user's Twitter profile is supplied as the user
-    // record.  In a production-quality application, the Twitter profile should
-    // be associated with a user record in the application's database, which
-    // allows for account linking and authentication with other identity
-    // providers.
-    // console.log(profile);
     User.findOrCreate(profile, cb);
   }
 ));
@@ -139,7 +133,6 @@ passport.deserializeUser(function(obj, done) {
   MongoClient.connect(mongodbUrl, function (err, db) {
       var collection = db.collection('users');
       collection.findOne({_id: require('mongodb').ObjectID(obj)}).then(function(result){
-        //   console.log(result);
           done(null, result);
       });
   });
@@ -171,18 +164,17 @@ app.set('view engine', 'handlebars');
 
 
 app.get('/', function(req, res){
-    res.render('home', {user: req.user});
+    res.render('home', {user: req.user, title: 'Book Trade'});
 });
 
 app.get('/mybooks', function(req, res){
-    // res.render('mybooks', {user: req.user});
     MongoClient.connect(mongodbUrl, function (err, db) {
         var collection = db.collection('books');
         var trade = db.collection('trade');
         collection.find().toArray(function(err, results) {
             trade.find({from: require('mongodb').ObjectID(req.user._id)}).toArray(function(err1, requests) {
                 trade.find({to: require('mongodb').ObjectID(req.user._id)}).toArray(function(err1, offers) {
-                    res.render('mybooks', {user: req.user, books: results, requests: requests, offers: offers, reqNum: requests.length, offNum: offers.length});
+                    res.render('mybooks', {user: req.user, books: results, requests: requests, offers: offers, reqNum: requests.length, offNum: offers.length, title: 'Book Trade | My Books'});
 
                 });
             });
@@ -192,14 +184,13 @@ app.get('/mybooks', function(req, res){
 
 
 app.get('/allbooks', function(req, res){
-    // res.render('mybooks', {user: req.user});
     MongoClient.connect(mongodbUrl, function (err, db) {
         var collection = db.collection('books');
         var trade = db.collection('trade');
         collection.find().toArray(function(err, results) {
             trade.find({from: require('mongodb').ObjectID(req.user._id)}).toArray(function(err1, requests) {
                 trade.find({to: require('mongodb').ObjectID(req.user._id)}).toArray(function(err1, offers) {
-                    res.render('allbooks', {user: req.user, books: results, requests: requests, offers: offers, reqNum: requests.length, offNum: offers.length});
+                    res.render('allbooks', {user: req.user, books: results, requests: requests, offers: offers, reqNum: requests.length, offNum: offers.length, title: 'Book Trade | All Books'});
 
                 });
             });
@@ -209,20 +200,13 @@ app.get('/allbooks', function(req, res){
 
 
 app.get('/addbook', function(req, res){
-    // res.render('mybooks', {user: req.user});
     request('https://www.googleapis.com/books/v1/volumes?q=' + req.query.q + '&maxResults=1&printType=books&projection=lite&langRestrict=en&orderBy=relevance', function (error, response, body) {
         console.log('error:', error); // Print the error if one occurred
-        console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
-        console.log('body:', body); // Print the HTML for the Google homepage.
         var body = JSON.parse(body);
         var obj = {
             title: body.items[0].volumeInfo.title,
             img: body.items[0].volumeInfo.imageLinks.smallThumbnail
         }
-
-        console.log(obj);
-        console.log(body.items[0].id);
-
         MongoClient.connect(mongodbUrl, function (err, db) {
             var collection = db.collection('books');
             collection.insert({bookId: body.items[0].id, userId: req.user._id, title: obj.title, img: obj.img}, function(err, data) {
@@ -238,7 +222,6 @@ app.get('/addbook', function(req, res){
 
 
 app.get('/tradebook', function(req, res){
-    // res.render('mybooks', {user: req.user});
     MongoClient.connect(mongodbUrl, function (err, db) {
         var books = db.collection('books');
         var trade = db.collection('trade');
@@ -248,8 +231,6 @@ app.get('/tradebook', function(req, res){
                     res.json({status: "no"});
                 } else {
                     trade.insert({from: req.user._id, to: result.userId, bookId: req.query.q, title: result.title , img: result.img}, function(err, data) {
-                        console.log(data.ops[0]);
-                        // res.json(data.ops[0]);
                         res.json({status: "ok"});
                     });
                 }
@@ -262,7 +243,6 @@ app.get('/tradebook', function(req, res){
 
 
 app.get('/removetrade', function(req, res){
-    // res.render('mybooks', {user: req.user});
     MongoClient.connect(mongodbUrl, function (err, db) {
         var trade = db.collection('trade');
         trade.remove({_id: require('mongodb').ObjectID(req.query.q)}, function(err, result) {
@@ -275,7 +255,6 @@ app.get('/removetrade', function(req, res){
 
 
 app.get('/deletebook', function(req, res){
-    // res.render('home', {user: req.user});
     MongoClient.connect(mongodbUrl, function (err, db) {
         var collection = db.collection('books');
         collection.remove({_id: require('mongodb').ObjectID(req.query.q)}, function() {
@@ -288,7 +267,7 @@ app.get('/deletebook', function(req, res){
 
 app.get('/set', function(req, res){
 
-    res.render('set', {user: req.user});
+    res.render('set', {user: req.user, title: 'Book Trade | Setting' });
 });
 
 
@@ -302,8 +281,6 @@ app.post('/setinfo', function(req, res) {
         if (req.body.state) {
             obj["state"] = req.body.state;
         }
-        console.log(obj);
-        console.log(req.user._id);
         collection.update({_id : require('mongodb').ObjectID(req.user._id)}, { $set: obj}, function(err) {
             console.log(err);
             req.session.success = 'You are successfully changed your city and state!';
@@ -319,8 +296,6 @@ app.post('/setpass', function(req, res) {
 
     var hash = req.user.password;
 
-    console.log(req.body.password);
-
     if (bcrypt.compareSync(req.body.password, hash)) {
         if (req.body.newPassword.length < 3) {
             req.session.error = 'New Password Should Be 3 Or More Chars!';
@@ -330,7 +305,6 @@ app.post('/setpass', function(req, res) {
                 var collection = db.collection('users');
                 var hash1 = bcrypt.hashSync(req.body.newPassword, 8);
 
-                console.log(hash1);
                 collection.update({_id : require('mongodb').ObjectID(req.user._id)}, { $set: { password: hash1 } }, function(err) {
                     console.log(err);
                     req.session.success = 'You are successfully changed your city and state!';
@@ -349,7 +323,7 @@ app.post('/setpass', function(req, res) {
 
 app.get('/signin', function(req, res){
     req.session.q = req.query.q;
-    res.render('signin');
+    res.render('signin', { title: 'Book Trade | Sign In' } );
 });
 
 app.post('/local-reg', passport.authenticate('local-signup', {
@@ -404,8 +378,8 @@ app.get('/auth/facebook/callback',
   passport.authenticate('facebook', { successRedirect: '/',
                                       failureRedirect: '/login' }));
 
+
 var port = process.argv[2];
 app.listen(port, function() {
   console.log('server listening on port ' + port);
-  console.log(config.url);
 });
